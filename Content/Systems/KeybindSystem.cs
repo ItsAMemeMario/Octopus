@@ -10,11 +10,14 @@ namespace Octopus.Content.Systems
 				public static ModKeybind WaterSpitKeybind { get; private set; }
 				public static ModKeybind InkBombKeybind { get; private set; }
 
+				public static ModKeybind OrangeFortKeybind { get; private set; }
+
 				public override void Load()
 				{
 						// Registers a new keybind
-						WaterSpitKeybind = KeybindLoader.RegisterKeybind(Mod, "Spit Water", Keys.LeftShift);
-						InkBombKeybind = KeybindLoader.RegisterKeybind(Mod, "Fire Ink Bomb", Keys.RightShift);
+						WaterSpitKeybind = KeybindLoader.RegisterKeybind(Mod, "Spit Water", Keys.Z);
+						InkBombKeybind = KeybindLoader.RegisterKeybind(Mod, "Fire Ink Bomb", Keys.X);
+						OrangeFortKeybind = KeybindLoader.RegisterKeybind(Mod, "Summon Orange Fort", Keys.C);
 				}
 
 				// Please see ExampleMod.cs' Unload() method for a detailed explanation of the unloading process.
@@ -23,6 +26,7 @@ namespace Octopus.Content.Systems
 						// Not required if your AssemblyLoadContext is unloading properly, but nulling out static fields can help you figure out what's keeping it loaded.
 						WaterSpitKeybind = null;
 						InkBombKeybind = null;
+						OrangeFortKeybind = null;
 				}
 		}
 }

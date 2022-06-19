@@ -8,6 +8,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Terraria.ID;
 using Terraria.Audio;
+using Octopus.Content.Buffs;
 using Octopus.Content.Items;
 
 namespace Octopus.Content.Players
@@ -17,6 +18,7 @@ namespace Octopus.Content.Players
 				public bool isInOctopusForm = false;
 
 				public int headTurnTimer = 0;
+				public int orangeFortSummonDelay = 0;
 
 				private const int DoubleJumpCooldown = 30;
 				private int DoubleJumpDelay = 0;
@@ -134,7 +136,8 @@ namespace Octopus.Content.Players
 												Projectile.NewProjectile(Player.GetSource_FromThis(), shootPosition.X, shootPosition.Y, Player.direction * 8f + Player.velocity.X * 0.3f, -1f, ProjectileID.WaterStream, 15, 5f, Player.whoAmI);
 										}
 								}
-								else if (headTurnTimer == 0 && KeybindSystem.InkBombKeybind.JustPressed)
+								// Fireink bomb when InkBombKeyBind is pressed or held
+								else if (headTurnTimer == 0 && (KeybindSystem.InkBombKeybind.JustPressed || KeybindSystem.InkBombKeybind.Current))
 								{
 										SoundEngine.PlaySound(SoundID.NPCHit25);
 										int headTurn;
@@ -151,6 +154,23 @@ namespace Octopus.Content.Players
 										shootVelocity = (shootVelocity / shootVelocity.Length()) * 16f;
 										Projectile.NewProjectile(Player.GetSource_FromThis(), shootPosition, shootVelocity, ModContent.ProjectileType<InkBomb>(), 100, 5f, Player.whoAmI);
 										headTurnTimer = headTurn * 15;
+								}
+								// Summon orange fort minion when OrangeFortKeybind is pressed
+								if (orangeFortSummonDelay == 0 && KeybindSystem.OrangeFortKeybind.JustPressed)
+								{
+										SoundEngine.PlaySound(SoundID.Item78, Player.position);
+
+										// This is needed so the buff that keeps your minion alive and allows you to despawn it properly applies
+										Player.AddBuff(ModContent.BuffType<OrangeFortBuff>(), 2);
+
+										// Minions have to be spawned manually, then have originalDamage assigned to the damage of the summon item
+										var projectile = Projectile.NewProjectileDirect(Player.GetSource_FromThis(), Player.position + new Vector2(2, 20), default, ModContent.ProjectileType<OrangeFort>(), 10, 5, owner: Player.whoAmI, ai0: Player.ownedProjectileCounts[ModContent.ProjectileType<OrangeFort>()]);
+										projectile.originalDamage = 10;
+										orangeFortSummonDelay = 30;
+								}
+								if (orangeFortSummonDelay > 0)
+								{
+										orangeFortSummonDelay--;
 								}
 						}
 				}

@@ -88,7 +88,7 @@ namespace Octopus.Content.Mounts
 								Rectangle rect = player.getRect();
 								Dust.NewDust(new Vector2(rect.X, rect.Y), rect.Width, rect.Height, DustID.Water);
 						}
-						//ShootProjectiles(player);
+						//int test = Mount._frame;
 				}
 
 				private void HidePlayer(Player player)
