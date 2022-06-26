@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
+using Terraria.Audio;
 using Terraria.ModLoader;
 using Octopus.Content.Buffs;
 using Octopus.Content.Projectiles;
@@ -16,6 +17,11 @@ namespace Octopus.Content.Projectiles
   {
     private const int Width = 16;
     private const int Height = 10;
+    private const float MaxDistanceFromTarget = 1600f;
+
+    private const int ShootCoolDown = 10;
+    private int ShootDelay;
+    private int HeadTurn = 1;
 
     private int stackOrder;
 
@@ -42,7 +48,7 @@ namespace Octopus.Content.Projectiles
       Projectile.tileCollide = false; // Makes the minion go through tiles freely
 
       // These below are needed for a minion weapon
-      Projectile.friendly = true; // Only controls if it deals damage to enemies on contact (more on that later)
+      Projectile.friendly = false; // Stops minion from dealing contact damage
       Projectile.minion = true; // Declares this as a minion (has many effects)
       Projectile.DamageType = DamageClass.Summon; // Declares the damage type (needed for it to deal damage)
       Projectile.minionSlots = 1f; // Amount of slots this minion occupies from the total minion slots available to the player (more on that later)
@@ -73,8 +79,15 @@ namespace Octopus.Content.Projectiles
       }
 
       Positioning(owner);
-      AttackNearest();
-      // Projectile.timeLeft = 0;
+      if (ShootDelay == 0)
+      {
+        AttackNearest(owner);
+      }
+      if (ShootDelay > 0)
+      {
+        AnimateShooting();
+        ShootDelay--;
+      }
     }
 
     // This is the "active check", makes sure the minion is alive while the player is alive, and despawns if not
@@ -129,9 +142,73 @@ namespace Octopus.Content.Projectiles
       Projectile.frame = 0;
     }
 
-    private void AttackNearest()
+    private void AttackNearest(Player owner)
     {
+      NPC target = default; // empty value so the code will compile
+      bool foundTarget = false;
 
+      // Target the NPC marked by whips if applicable
+      if (owner.HasMinionAttackTargetNPC)
+      {
+        target = Main.npc[owner.MinionAttackTargetNPC];
+        if (Vector2.Distance(target.Center, Projectile.Center) <= MaxDistanceFromTarget)
+        {
+          foundTarget = true;
+        }
+      }
+
+      // Manually search for target
+      if (!foundTarget)
+      {
+        float distanceBetween;
+        float minDistance = 0f;
+        NPC npc;
+        for (int i = 0; i < Main.maxNPCs; i++)
+        {
+          npc = Main.npc[i];
+          if (npc.CanBeChasedBy())
+          {
+            distanceBetween = Vector2.Distance(npc.Center, Projectile.Center);
+            bool closest = distanceBetween < minDistance;
+            bool inRange = distanceBetween <= MaxDistanceFromTarget;
+            bool lineOfSight = Collision.CanHitLine(Projectile.position, Projectile.width, Projectile.height, npc.position, npc.width, npc.height);
+
+            if (inRange && (closest || !foundTarget) && lineOfSight)
+            {
+              target = npc;
+              minDistance = distanceBetween;
+              foundTarget = true;
+            }
+          }
+        }
+      }
+
+      // If target is found, shoot projectile at target
+      if (foundTarget)
+      {
+        SoundEngine.PlaySound(SoundID.Item11, Projectile.position);
+        Vector2 shootVelocity = target.Center - Projectile.Center;
+        shootVelocity.Normalize();
+        shootVelocity *= 18f;
+        Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, shootVelocity, ModContent.ProjectileType<OrangeSeed>(), 20, 2, Projectile.owner);
+
+        ShootDelay = ShootCoolDown;
+        HeadTurn = target.Center.X >= Projectile.Center.X ? 1: -1;
+      }
+    }
+
+    private void AnimateShooting()
+    {
+      Projectile.direction = Projectile.spriteDirection = HeadTurn;
+      switch ((ShootDelay + 1) / 2)
+      {
+        case 5:
+          Projectile.position.X -= 2f * HeadTurn;
+          break;
+        case 4:
+          Projectile.position.X -= 1f * HeadTurn;
+          break;
+      }
     }
   }
 }

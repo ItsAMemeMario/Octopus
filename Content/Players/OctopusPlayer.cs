@@ -17,8 +17,11 @@ namespace Octopus.Content.Players
   {
     public bool isInOctopusForm = false;
 
-    public int headTurnTimer = 0;
-    public int orangeFortSummonDelay = 0;
+    private int HeadTurn = 1;
+
+    private const int InkBombCoolDown = 24;
+    public int InkBombDelay = 0;
+    private int OrangeFortSummonDelay = 0;
 
     private const int DoubleJumpCooldown = 30;
     private int DoubleJumpDelay = 0;
@@ -69,10 +72,10 @@ namespace Octopus.Content.Players
         ArmorIDs.Legs.Sets.HidesBottomSkin[KetchupBall.equipSlotLegs] = true;
 
       }
-      if (headTurnTimer != 0)
+      if (InkBombDelay > 0)
       {
-        Player.direction = headTurnTimer / Math.Abs(headTurnTimer);
-        headTurnTimer -= headTurnTimer / Math.Abs(headTurnTimer);
+        Player.direction = HeadTurn;
+        InkBombDelay -= 1;
       }
     }
 
@@ -138,27 +141,30 @@ namespace Octopus.Content.Players
             Projectile.NewProjectile(Player.GetSource_FromThis(), shootPosition.X, shootPosition.Y, Player.direction * 8f + Player.velocity.X * 0.3f, -1f, ProjectileID.WaterStream, 15, 5f, Player.whoAmI);
           }
         }
-        // Fireink bomb when InkBombKeyBind is pressed or held
-        else if (headTurnTimer == 0 && (KeybindSystem.InkBombKeybind.JustPressed || KeybindSystem.InkBombKeybind.Current))
+        // Fire ink bomb when InkBombKeyBind is pressed or held
+        else if (InkBombDelay == 0 && (KeybindSystem.InkBombKeybind.JustPressed || KeybindSystem.InkBombKeybind.Current))
         {
           SoundEngine.PlaySound(SoundID.NPCHit25);
-          int headTurn;
           if (Main.MouseWorld.X >= Player.Center.X)
           {
-            headTurn = 1;
+            HeadTurn = 1;
           }
           else
           {
-            headTurn = -1;
+            HeadTurn = -1;
           }
-          Vector2 shootPosition = new Vector2(Player.position.X + headTurn * 10f + 10f + Player.velocity.X * 2f, Player.position.Y + 14f + Player.velocity.Y * 2f);
+          Vector2 shootPosition = new Vector2(Player.position.X + HeadTurn * 10f + 10f + Player.velocity.X * 2f, Player.position.Y + 14f + Player.velocity.Y * 2f);
           Vector2 shootVelocity = Main.MouseWorld - shootPosition;
           shootVelocity = (shootVelocity / shootVelocity.Length()) * 16f;
           Projectile.NewProjectile(Player.GetSource_FromThis(), shootPosition, shootVelocity, ModContent.ProjectileType<InkBomb>(), 100, 5f, Player.whoAmI);
-          headTurnTimer = headTurn * 15;
+          InkBombDelay = InkBombCoolDown;
+        }
+        if (InkBombDelay > 0)
+        {
+          AnimateInkBombSpit();
         }
         // Summon orange fort minion when OrangeFortKeybind is pressed
-        if (orangeFortSummonDelay == 0 && KeybindSystem.OrangeFortKeybind.JustPressed)
+        if (OrangeFortSummonDelay == 0 && KeybindSystem.OrangeFortKeybind.JustPressed)
         {
           SoundEngine.PlaySound(SoundID.Item78, Player.position);
 
@@ -168,11 +174,11 @@ namespace Octopus.Content.Players
           // Minions have to be spawned manually, then have originalDamage assigned to the damage of the summon item
           var projectile = Projectile.NewProjectileDirect(Player.GetSource_FromThis(), Player.position + new Vector2(2, 20), default, ModContent.ProjectileType<OrangeFort>(), 10, 5, owner: Player.whoAmI, ai0: Player.ownedProjectileCounts[ModContent.ProjectileType<OrangeFort>()]);
           projectile.originalDamage = 10;
-          orangeFortSummonDelay = 30;
+          OrangeFortSummonDelay = 30;
         }
-        if (orangeFortSummonDelay > 0)
+        if (OrangeFortSummonDelay > 0)
         {
-          orangeFortSummonDelay--;
+          OrangeFortSummonDelay--;
         }
       }
     }
@@ -182,6 +188,31 @@ namespace Octopus.Content.Players
       if (isInOctopusForm)
       {
         SoundEngine.PlaySound(SoundID.NPCHit25, Player.position);
+      }
+    }
+
+    private void AnimateInkBombSpit()
+    {
+      switch ((InkBombDelay + 1) / 2)
+      {
+        case 12:
+          Player.mount._frame = 1;
+          break;
+        case 11:
+          Player.mount._frame = 1;
+          break;
+        case 10:
+          Player.mount._frame = 3;
+          break;
+        case 9:
+          Player.mount._frame = 3;
+          break;
+        case 8:
+          Player.mount._frame = 3;
+          break;
+        default:
+          Player.mount._frame = 0;
+          break;
       }
     }
   }

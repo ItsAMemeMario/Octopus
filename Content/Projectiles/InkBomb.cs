@@ -27,6 +27,7 @@ namespace Octopus.Content.Projectiles
       Projectile.penetrate = -1;
       Projectile.damage = 100;
 
+      Projectile.alpha = 255;
       DrawOffsetX = -(30 - Width / 2);
       DrawOriginOffsetY = -(20 - Height / 2);
       DrawOriginOffsetX = 6;
@@ -52,6 +53,9 @@ namespace Octopus.Content.Projectiles
       }
       else
       {
+        Projectile.ai[0] += 1f;
+        FadeIn();
+
         // slow down horizontally
         Projectile.velocity.X *= 0.99f;
         // affected by gravity
@@ -139,6 +143,20 @@ namespace Octopus.Content.Projectiles
       Projectile.width = Width;
       Projectile.height = Height;
       Projectile.Center = center;
+    }
+
+    private void FadeIn()
+    {
+      if (Projectile.ai[0] <= 50f)
+      {
+        // Fade in
+        Projectile.alpha -= 50;
+        // Cap alpha before timer reaches 50 ticks
+        if (Projectile.alpha < 0)
+          Projectile.alpha = 0;
+
+        return;
+      }
     }
   }
 }

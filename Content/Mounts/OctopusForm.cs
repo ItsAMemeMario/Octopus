@@ -88,9 +88,17 @@ namespace Octopus.Content.Mounts
         Rectangle rect = player.getRect();
         Dust.NewDust(new Vector2(rect.X, rect.Y), rect.Width, rect.Height, DustID.Water);
       }
-      //int test = Mount._frame;
     }
 
+    public override bool UpdateFrame(Player mountedPlayer, int state, Vector2 velocity)
+    {
+      if (mountedPlayer.GetModPlayer<OctopusPlayer>().InkBombDelay > 0)
+      {
+        AnimateInkBombSpit(mountedPlayer);
+        return false;
+      }
+      return true;
+    }
     private void HidePlayer(Player player)
     {
       player.GetModPlayer<OctopusPlayer>().isInOctopusForm = true;
@@ -98,6 +106,31 @@ namespace Octopus.Content.Mounts
       ArmorIDs.Body.Sets.HidesTopSkin[KetchupBall.equipSlotBody] = true;
       ArmorIDs.Body.Sets.HidesArms[KetchupBall.equipSlotBody] = true;
       ArmorIDs.Legs.Sets.HidesBottomSkin[KetchupBall.equipSlotLegs] = true;
+    }
+
+    private void AnimateInkBombSpit(Player player)
+    {
+      switch ((player.GetModPlayer<OctopusPlayer>().InkBombDelay) / 2)
+      {
+        case 11:
+          player.mount._frame = 1;
+          break;
+        case 10:
+          player.mount._frame = 1;
+          break;
+        case 9:
+          player.mount._frame = 3;
+          break;
+        case 8:
+          player.mount._frame = 3;
+          break;
+        case 7:
+          player.mount._frame = 3;
+          break;
+        default:
+          player.mount._frame = 0;
+          break;
+      }
     }
 
     //private void ShootProjectiles(Player player)
